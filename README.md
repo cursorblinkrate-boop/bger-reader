@@ -1,18 +1,18 @@
 # BGer Reader 📖
 
 **An independent accessibility and focus layer for Swiss Federal Supreme Court decisions**
-*(search.bger.ch – unabhängiger Prototyp, nicht mit dem Schweizerischen Bundesgericht verbunden.)*
+*(unabhängiger Prototyp, nicht mit dem Schweizerischen Bundesgericht verbunden.)*
 
 Ein Browser-Werkzeug, das Entscheide des Bundesgerichts besser lesbar macht –
 besonders für Menschen mit Lese-Einschränkungen, ADHS oder Sehschwäche.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Tests: 49](https://img.shields.io/badge/tests-49%20checks-brightgreen.svg)
+![Tests: 57](https://img.shields.io/badge/tests-57%20checks-brightgreen.svg)
 ![Dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen.svg)
 
 ## Warum dieses Projekt?
 
-Entscheide auf search.bger.ch erscheinen in einer festen, kleinen Typografie.
+Entscheide auf den BGer-Webseiten erscheinen in einer festen, kleinen Typografie.
 Klassische Reader-Funktionen (z. B. in Safari) lösen das Problem, indem sie den
 Entscheid in einen einzigen Fliesstext verwandeln – die nummerierten Absätze,
 die die argumentative Struktur tragen, gehen dabei verloren. Dieses Projekt
@@ -26,9 +26,18 @@ unterbrechen beim ersten Durchlesen den Lesefluss. BGer Reader erkennt sie
 **heuristisch und reversibel** – nichts wird gelöscht, alles bleibt mit einem
 Klick verfügbar, beim Drucken wird der volle Text gezeigt.
 
+## Unterstützte Seiten
+
+| Seite | Inhalt | Absatz-Klassen |
+|---|---|---|
+| `search.bger.ch/…/clir/…` | BGE (amtliche Sammlung) | `div.paraatf` |
+| `search.bger.ch/…/aza/…` | Weitere Urteile ab 2000 | `div.para` |
+| `relevancy.bger.ch/…/clir/…` | ältere BGE-Ansicht | `div.paraatf` |
+
 ## Features
 
 - 🔤 Typografie: Schriftgrösse, Schriftart (Serif/Sans), Schriftstärke, Zeilenabstand, Buchstaben- und Wortabstand, maximale Zeilenlänge
+- ↔️ **Spaltenbreite einstellbar** (die Textkolonne zwischen den Haarlinien, Standard 625 px)
 - ✂️ Silbentrennung (Sprache der Seite wird respektiert)
 - 🎨 Farbschemata: Weiss, Sepia, Dunkel, Hoher Kontrast
 - 📚 **Literaturklammern einklappbar** – zwei Modi:
@@ -62,7 +71,7 @@ Das Werkzeug läuft über die kostenlose Browser-Erweiterung **Tampermonkey**
 
 ## Benutzung
 
-1. Einen Entscheid auf [search.bger.ch](https://search.bger.ch) öffnen
+1. Einen Entscheid auf einer der unterstützten Seiten öffnen
 2. Oben rechts erscheint **„📖 BGer Reader"** (Titel anklicken minimiert das Panel)
 3. **„Lesemodus einschalten"** aktivieren und alles nach Belieben anpassen
 
@@ -72,28 +81,38 @@ Das Werkzeug läuft über die kostenlose Browser-Erweiterung **Tampermonkey**
 |---|---|
 | Kein `innerHTML`-/Regex-Parsing über das ganze Dokument | zerstört Links und Formatierung; stattdessen TreeWalker + Bracket-Stack + `Range.extractContents()` |
 | Konservative Heuristik statt perfekter Erkennung | Jahreszahlen, Aktenzeichen und Gesetzesartikel enthalten Zahlen; lieber zu wenig automatisch einklappen – jede Stelle bleibt manuell aufklappbar |
-| Styles nur per Klasse + CSS-Variablen auf `div.paraatf`/`div.eit` | die Absatzstruktur bleibt unversehrt; beim Ausschalten ist alles wie vorher |
+| Styles nur per Klasse + CSS-Variablen auf `div.paraatf`/`div.para`/`div.eit` | die Absatzstruktur bleibt unversehrt; beim Ausschalten ist alles wie vorher |
 | Panel im Shadow DOM | Schutz in beide Richtungen gegen das alte Seiten-CSS |
 | Kernlogik (`window.BGerReader`) ohne Tampermonkey-Abhängigkeit | gleicher Code kann später als Firefox-/Chromium-Erweiterung verpackt werden |
-| Nur `search.bger.ch`, `@grant none` | minimale Berechtigung; kein Zugriff auf Seiteninhalte seitens des Skripts über privilegierte APIs |
+| Nur BGer-Domains, `@grant none` | minimale Berechtigung; kein Zugriff auf andere Seiten |
 
 ## Tests
 
-49 automatisierte Prüfungen (jsdom) gegen eine **echte heruntergeladene Entscheidseite**
-(BGE 152 IV 1) sowie synthetische Fixtures: verschachtelte/unbalancierte Klammern,
-Links in Klammern, Jahreszahlen, Aktenzeichen, Gesetzesartikel, Reversibilität
-(Roundtrip stellt den Original-DOM exakt wieder her).
+57 automatisierte Prüfungen (jsdom) gegen **drei echte heruntergeladene Entscheidseiten**
+(BGE 152 IV 1 / clir, Weiteres Urteil / aza, BGE 116 IA 359 / relevancy) sowie synthetische
+Fixtures: verschachtelte/unbalancierte Klammern, Links in Klammern, Jahreszahlen,
+Aktenzeichen, Gesetzesartikel, Reversibilität (Roundtrip stellt den Original-DOM exakt
+wieder her) und die Spaltenbreiten-Steuerung.
 
 ```bash
 npm install jsdom
-curl -s "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F152-IV-1%3Ade&lang=de&type=show_document" -o /tmp/bger_test.html
+# Fixtures laden (Befehle stehen im Kopfkommentar von test/test-runner.js)
 node test/test-runner.js
 ```
 
-## Bekannte Grenzen (Version 1)
+## Roadmap / bekannte Grenzen
 
-- Nur HTML-Entscheide auf search.bger.ch, nur Deutsch – PDFs, Französisch/Italienisch und ältere Seitentypen sind Version 2
-- Die Literaturerkennung ist **heuristisch**: einzelne Literaturklammern werden nicht erkannt, in seltenen Fällen kann eine inhaltliche Bemerkung eingeklappt werden. Das ist beabsichtigt – Erkennung ist reversibel und nie destruktiv
+- **Version 2.2 (geplant):** Feintuning der Klammerklassifikation – Unterscheidung von
+  reinen Literaturangaben (`Buch XYZ, S. 28`), Artikelverweisen (`Art. 22 ZGB`) und
+  Klammerbemerkungen mit wesentlichem materiellem Inhalt (z. B. *nemo-tenetur*-Grundsatz),
+  jeweils mit eigener Klapp-Strategie.
+- **Idee (zu prüfen):** eigene Schriftdateien laden (z. B. Legasthenie-Schriften) –
+  technisch machbar (CSS FontFace API), aufwendig in der Bedienung.
+- Version 1 deckt nur HTML-Entscheide auf Deutsch ab – PDFs, Französisch/Italienisch
+  und weitere Heuristiken sind spätere Versionen.
+- Die Literaturerkennung ist **heuristisch**: einzelne Literaturklammern werden nicht
+  erkannt, in seltenen Fällen kann eine inhaltliche Bemerkung eingeklappt werden.
+  Das ist beabsichtigt – Erkennung ist reversibel und nie destruktiv.
 - Keine Nutzertests durchgeführt bisher – willkommen als Beitrag!
 
 ## Haftungsausschluss
