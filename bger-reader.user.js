@@ -2,10 +2,12 @@
 // @name         BGer Reader – Lesemodus für search.bger.ch
 // @name:de      BGer Reader – Lesemodus für search.bger.ch
 // @namespace    https://github.com/cursorblinkrate-boop/bger-reader
-// @version      2.0.0
+// @version      2.1.0
 // @description  Accessibility Layer für Entscheide des Schweizerischen Bundesgerichts: Typografie und Farben anpassbar, Absätze bleiben erhalten, wahrscheinliche Literaturklammern werden reversibel einklappbar.
 // @author       cursorblinkrate-boop
 // @match        https://search.bger.ch/*
+// @match        https://relevancy.bger.ch/*
+// @match        http://relevancy.bger.ch/*
 // @run-at       document-idle
 // @grant        none
 // ==/UserScript==
@@ -237,6 +239,7 @@
     buchstabenabstand: 0,       // px
     wortabstand: 0,             // px
     zeilenlaenge: 0,            // 0 = unbegrenzt, sonst Zeichen (ch)
+    spaltenbreite: 625,         // px – Breite der Haarlinien-Textspalte (Seiten-Standard: 625)
     silbentrennung: false,
     farbschema: 'hell',         // hell | sepia | dunkel | kontrast
     klammerModus: 'literatur',  // literatur (konservativ) | alle
@@ -270,8 +273,10 @@
       background-color: var(--bkl-bg) !important;
       color: var(--bkl-fg) !important;
     }
-    /* Entscheidabsätze: Typografie. Absatzstruktur bleibt vollständig erhalten. */
-    html.bkl-aktiv div.paraatf {
+    /* Entscheidabsätze: Typografie. Absatzstruktur bleibt vollständig erhalten.
+       div.paraatf = BGE-Ansicht (clir/relevancy), div.para = aza-Ansicht (Weitere Urteile ab 2000). */
+    html.bkl-aktiv div.paraatf,
+    html.bkl-aktiv div.para {
       font-family: var(--bkl-font) !important;
       font-size: var(--bkl-size) !important;
       line-height: var(--bkl-lh) !important;
@@ -285,7 +290,24 @@
       margin-right: auto !important;
       hyphens: var(--bkl-hyphens) !important;
     }
-    html.bkl-aktiv div.paraatf a { color: var(--bkl-link) !important; }
+    html.bkl-aktiv div.paraatf a,
+    html.bkl-aktiv div.para a { color: var(--bkl-link) !important; }
+
+    /* Spaltenbreite (Haarlinien-Box): das Seiten-CSS fixiert div.eit .middle auf 625px;
+       wir überschreiben mit einstellbarer Breite und passen den Page-Rahmen an. */
+    html.bkl-aktiv div.eit .middle {
+      width: var(--bkl-spalte) !important;
+    }
+    html.bkl-aktiv div.eit .main,
+    html.bkl-aktiv div.eit .top,
+    html.bkl-aktiv div.eit .bottom {
+      width: calc(var(--bkl-spalte) + 280px) !important;
+    }
+    /* Haarlinien-Farbe ans Farbschema anpassen */
+    html.bkl-aktiv div.eit .box .content {
+      border-left-color: var(--bkl-border) !important;
+      border-right-color: var(--bkl-border) !important;
+    }
 
     /* Klammerbemerkungen (Disclosure-Pattern: echter Button, aria-expanded) */
     span.bkl-fold { display: inline; }
@@ -348,6 +370,7 @@
     html.style.setProperty('--bkl-ls', e.buchstabenabstand + 'px');
     html.style.setProperty('--bkl-ws', e.wortabstand + 'px');
     html.style.setProperty('--bkl-maxw', e.zeilenlaenge > 0 ? e.zeilenlaenge + 'ch' : 'none');
+    html.style.setProperty('--bkl-spalte', e.spaltenbreite + 'px');
     html.style.setProperty('--bkl-hyphens', e.silbentrennung ? 'auto' : 'manual');
     html.style.setProperty('--bkl-bg', farben.bg);
     html.style.setProperty('--bkl-fg', farben.fg);
@@ -362,7 +385,7 @@
   /* ================================================================== */
 
   function entscheidBloecke() {
-    return Array.prototype.slice.call(document.querySelectorAll('div.paraatf'));
+    return Array.prototype.slice.call(document.querySelectorAll('div.paraatf, div.para'));
   }
 
   function verarbeiteKlammern() {
@@ -502,6 +525,10 @@
           <input type="range" id="bkl-laenge" min="0" max="120" step="10"><span class="bkl-wert" id="bkl-laenge-w"></span>
         </div>
         <div class="bkl-zeile">
+          <label for="bkl-spalte">Spaltenbreite (Rahmen)</label>
+          <input type="range" id="bkl-spalte" min="400" max="1400" step="25"><span class="bkl-wert" id="bkl-spalte-w"></span>
+        </div>
+        <div class="bkl-zeile">
           <label for="bkl-silben">Silbentrennung</label>
           <input type="checkbox" id="bkl-silben">
         </div>
@@ -562,6 +589,8 @@
     shadow.getElementById('bkl-worte-w').textContent = einstellungen.wortabstand + 'px';
     shadow.getElementById('bkl-laenge').value = einstellungen.zeilenlaenge;
     shadow.getElementById('bkl-laenge-w').textContent = einstellungen.zeilenlaenge === 0 ? 'aus' : einstellungen.zeilenlaenge;
+    shadow.getElementById('bkl-spalte').value = einstellungen.spaltenbreite;
+    shadow.getElementById('bkl-spalte-w').textContent = einstellungen.spaltenbreite + 'px';
     shadow.getElementById('bkl-silben').checked = einstellungen.silbentrennung;
     shadow.getElementById('bkl-farbe').value = einstellungen.farbschema;
     shadow.getElementById('bkl-klammer-modus').value = einstellungen.klammerModus;
@@ -588,6 +617,7 @@
   bei('bkl-buchstaben', 'input', function (e) { einstellungen.buchstabenabstand = +e.target.value; allesAnwenden(); });
   bei('bkl-worte', 'input', function (e) { einstellungen.wortabstand = +e.target.value; allesAnwenden(); });
   bei('bkl-laenge', 'input', function (e) { einstellungen.zeilenlaenge = +e.target.value; allesAnwenden(); });
+  bei('bkl-spalte', 'input', function (e) { einstellungen.spaltenbreite = +e.target.value; allesAnwenden(); });
   bei('bkl-silben', 'change', function (e) { einstellungen.silbentrennung = e.target.checked; allesAnwenden(); });
   bei('bkl-farbe', 'change', function (e) { einstellungen.farbschema = e.target.value; allesAnwenden(); });
   bei('bkl-klammer-modus', 'change', function (e) { einstellungen.klammerModus = e.target.value; allesAnwenden(); });
