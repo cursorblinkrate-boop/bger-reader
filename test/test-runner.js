@@ -2,8 +2,10 @@
  * Aufruf: node test-runner.js
  *
  * Voraussetzungen: npm install jsdom
- * Optional: echte Entscheidseite als Fixture:
+ * Optionale echte Fixtures (verifizieren gegen Produktionsseiten):
  *   curl -s "https://search.bger.ch/ext/eurospider/live/de/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F152-IV-1%3Ade&lang=de&type=show_document" -o /tmp/bger_test.html
+ *   curl -s "https://search.bger.ch/ext/eurospider/live/de/php/aza/http/index.php?highlight_docid=aza%3A%2F%2F14-07-2026-2C_729-2025&lang=de&type=show_document" -o /tmp/bger_aza.html
+ *   curl -s "http://relevancy.bger.ch/php/clir/http/index.php?highlight_docid=atf%3A%2F%2F116-IA-359%3Ade&lang=de&type=show_document" -o /tmp/bger_relevancy.html
  */
 'use strict';
 const fs = require('fs');
@@ -134,8 +136,8 @@ const SYNTHESE = `<!doctype html><html><body><div class="eit">
     !!foldP3 && foldP3.textContent.indexOf('(Ausnahme vom Grundsatz)') !== -1);
 }
 
-/* ---------- 4. Komplettes Skript auf der ECHTEN heruntergeladenen Seite ---------- */
-console.log('\n[4] Echte Entscheidseite (BGE 152 IV 1)');
+/* ---------- 4. Komplettes Skript auf der ECHTEN heruntergeladenen Seite (clir/BGE) ---------- */
+console.log('\n[4] Echte Entscheidseite (BGE 152 IV 1, clir)');
 
 const ECHTE_SEITE = process.env.BGER_FIXTURE || '/tmp/bger_test.html';
 if (fs.existsSync(ECHTE_SEITE)) {
@@ -194,7 +196,7 @@ if (fs.existsSync(ECHTE_SEITE)) {
   const textNachher = doc.querySelector('div.eit').textContent;
   pruefe('Roundtrip: Gesamttext nach Entfernen identisch', textVorher.replace(/[▸▾]/g, '') === textNachher);
 } else {
-  console.log('  ⚠️  Echte Seite nicht gefunden (siehe Kopfkommentar für curl-Befehl), Block übersprungen.');
+  console.log('  ⚠️  Echte Seite nicht gefunden (siehe Kopfkommentar für curl-Befehle), Block übersprungen.');
 }
 
 /* ---------- 5. UI-Integration: Lesemodus einschalten via Panel ---------- */
@@ -224,6 +226,69 @@ console.log('\n[5] UI-Integration');
   shadow.getElementById('bkl-reset').dispatchEvent(new dom.window.Event('click', { bubbles: true }));
   pruefe('Reset entfernt Lesemodus-Klasse', !doc.documentElement.classList.contains('bkl-aktiv'));
   pruefe('Reset entfernt alle Folds', doc.querySelectorAll('.bkl-fold').length === 0);
+}
+
+/* ---------- 6. Weitere Seitentypen: aza (Weitere Urteile ab 2000) & relevancy ---------- */
+console.log('\n[6] aza- und relevancy-Seiten');
+
+const AZA_FIXTURE = process.env.BGER_AZA_FIXTURE || '/tmp/bger_aza.html';
+if (fs.existsSync(AZA_FIXTURE)) {
+  const html = fs.readFileSync(AZA_FIXTURE, 'utf8');
+  const dom = domMitScript(html, 'https://search.bger.ch/ext/eurospider/live/de/php/aza/http/index.php?type=show_document');
+  const doc = dom.window.document;
+  const R = dom.window.BGerReader;
+
+  const bloecke = doc.querySelectorAll('div.para');
+  pruefe('aza: Entscheidabsätze (div.para) gefunden', bloecke.length > 20, bloecke.length + ' gefunden');
+
+  let anzahl = 0;
+  bloecke.forEach(function (b) { anzahl += R.blockVerarbeiten(b, 'literatur', 80); });
+  pruefe('aza: Klammerverarbeitung läuft', anzahl >= 0, anzahl + ' gefunden');
+
+  const textVorher = doc.querySelector('div.eit').textContent;
+  R.allesAufklappenUndEntfernen();
+  pruefe('aza: Roundtrip stellt Original her', textVorher.replace(/[▸▾]/g, '') === doc.querySelector('div.eit').textContent);
+} else {
+  console.log('  ⚠️  aza-Fixture nicht gefunden, übersprungen.');
+}
+
+const RELEVANCY_FIXTURE = process.env.BGER_RELEVANCY_FIXTURE || '/tmp/bger_relevancy.html';
+if (fs.existsSync(RELEVANCY_FIXTURE)) {
+  const html = fs.readFileSync(RELEVANCY_FIXTURE, 'utf8');
+  const dom = domMitScript(html, 'http://relevancy.bger.ch/php/clir/http/index.php?type=show_document');
+  const doc = dom.window.document;
+
+  const bloecke = doc.querySelectorAll('div.paraatf');
+  pruefe('relevancy: Entscheidabsätze (div.paraatf) gefunden', bloecke.length > 20, bloecke.length + ' gefunden');
+  pruefe('relevancy: Panel-Host existiert', !!doc.getElementById('bkl-panel-host'));
+} else {
+  console.log('  ⚠️  relevancy-Fixture nicht gefunden, übersprungen.');
+}
+
+/* ---------- 7. Spaltenbreite (Haarlinien) ---------- */
+console.log('\n[7] Spaltenbreite');
+{
+  const html = fs.readFileSync(RELEVANCY_FIXTURE, 'utf8');
+  const dom = domMitScript(html);
+  const doc = dom.window.document;
+  const host = doc.getElementById('bkl-panel-host');
+  const shadow = host.shadowRoot;
+
+  const aktiv = shadow.getElementById('bkl-aktiv');
+  aktiv.checked = true;
+  aktiv.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+
+  pruefe('Spaltenbreite-Standard 625px gesetzt',
+    doc.documentElement.style.getPropertyValue('--bkl-spalte') === '625px');
+
+  const spalte = shadow.getElementById('bkl-spalte');
+  spalte.value = '900';
+  spalte.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  pruefe('Spaltenbreite auf 900px änderbar',
+    doc.documentElement.style.getPropertyValue('--bkl-spalte') === '900px');
+
+  pruefe('Seiten-CSS enthält Spaltenbreite-Regel für div.eit .middle',
+    /html\.bkl-aktiv div\.eit \.middle\s*\{[^}]*var\(--bkl-spalte\)/.test(dom.window.eval('document.getElementById("bkl-style").textContent')));
 }
 
 /* ---------- Ergebnis ---------- */
