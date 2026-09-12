@@ -4,6 +4,7 @@
 **Accessibility layer for Swiss Federal Supreme Court decisions**
 
 
+
 ## Unterstützte Seiten
 
 | Seite | Inhalt | Absatz-Klassen |
@@ -14,17 +15,31 @@
 
 
 
---- work in progress
+--- *work in progress*
 
 
+## *naked*
+<img width="816" height="941" alt="naked" src="https://github.com/user-attachments/assets/4ffec15f-a941-4a63-aa73-fd9b71125062" />
 
-# Anleitung - BROWSER ADDON NEXT!!
+## *view references*
+<img width="1332" height="832" alt="3_auf" src="https://github.com/user-attachments/assets/33a28668-8232-40c8-9865-70fe680bb06f" />
+
+## *hide references*
+<img width="1334" height="942" alt="1_closed" src="https://github.com/user-attachments/assets/a3585080-3d2f-4302-a2cb-b4f817e4561d" />
+<img width="1005" height="684" alt="3_zu" src="https://github.com/user-attachments/assets/5045d4a8-147f-4b56-b79f-3090543b388c" />
+
+## *easy mode*
+<img width="1325" height="931" alt="2_zu" src="https://github.com/user-attachments/assets/2c29d089-55d0-45c1-90e7-c712d80a18e7" />
+--- *work in progress*
+
+
+### Anleitung - BROWSER ADDON NEXT!!
 
 Das winzige Skript läuft über die kostenlose Browser-Erweiterung **Tampermonkey**
 (Firefox, Chrome, Edge, Brave).
 
 
-## Variante A: BROWSER ADDON NEXT!!
+### Variante A: BROWSER ADDON NEXT!!
 
 1. **Tampermonkey installieren:**
    - Firefox: https://addons.mozilla.org/de/firefox/addon/tampermonkey/
