@@ -1,10 +1,9 @@
 # BGer Reader 📖
 
-**An independent accessibility and focus layer for Swiss Federal Supreme Court decisions**
-*(unabhängiger Prototyp, nicht mit dem Schweizerischen Bundesgericht verbunden.)*
+**Accessibility and focus layer for Swiss Federal Supreme Court decisions**
 
-Ein Browser-Werkzeug, das Entscheide des Bundesgerichts besser lesbar macht –
-besonders für Menschen mit Lese-Einschränkungen, ADHS oder Sehschwäche.
+Ein Browser-Addon zum Lesen von Bundesgerichtsentscheinden. 
+
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Tests: 57](https://img.shields.io/badge/tests-57%20checks-brightgreen.svg)
@@ -75,16 +74,7 @@ Das Werkzeug läuft über die kostenlose Browser-Erweiterung **Tampermonkey**
 2. Oben rechts erscheint **„📖 BGer Reader"** (Titel anklicken minimiert das Panel)
 3. **„Lesemodus einschalten"** aktivieren und alles nach Belieben anpassen
 
-## Designentscheidungen
 
-| Entscheidung | Begründung |
-|---|---|
-| Kein `innerHTML`-/Regex-Parsing über das ganze Dokument | zerstört Links und Formatierung; stattdessen TreeWalker + Bracket-Stack + `Range.extractContents()` |
-| Konservative Heuristik statt perfekter Erkennung | Jahreszahlen, Aktenzeichen und Gesetzesartikel enthalten Zahlen; lieber zu wenig automatisch einklappen – jede Stelle bleibt manuell aufklappbar |
-| Styles nur per Klasse + CSS-Variablen auf `div.paraatf`/`div.para`/`div.eit` | die Absatzstruktur bleibt unversehrt; beim Ausschalten ist alles wie vorher |
-| Panel im Shadow DOM | Schutz in beide Richtungen gegen das alte Seiten-CSS |
-| Kernlogik (`window.BGerReader`) ohne Tampermonkey-Abhängigkeit | gleicher Code kann später als Firefox-/Chromium-Erweiterung verpackt werden |
-| Nur BGer-Domains, `@grant none` | minimale Berechtigung; kein Zugriff auf andere Seiten |
 
 ## Tests
 
