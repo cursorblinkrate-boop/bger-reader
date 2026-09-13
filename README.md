@@ -1,4 +1,6 @@
-bger-reader 
+# bger-reader 
+
+
 - Barrierefreie Bundesgerichtsentscheide
 - Accessibility tool for Swiss Federal Supreme Court decisions
 - User-Skript für Tamper-Monkey
@@ -6,8 +8,10 @@ bger-reader
 *(english below)*
 
 ## Anleitung 
+
+
 Skript läuft über die kostenlose Browser-Erweiterung **Tampermonkey**
-(Firefox, Chrome, Edge, Brave).
+(Firefox, Chrome, Edge, Brave, usw.).
 
 1. **Tampermonkey installieren:**
    - Firefox: https://addons.mozilla.org/de/firefox/addon/tampermonkey/
