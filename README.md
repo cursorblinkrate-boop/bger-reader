@@ -1,6 +1,7 @@
 # BGE-Reader
 
-**Barrierefreie Bundesgerichtsentscheinde.** / **Accessibility tool for Swiss Federal Supreme Court decisions.**
+**Barrierefreie Bundesgerichtsentscheinde.** / **Accessibility tool for Swiss Federal Supreme Court decisions.** 
+(english below)
 
 ## Anleitung 
 Skript läuft über die kostenlose Browser-Erweiterung **Tampermonkey**
