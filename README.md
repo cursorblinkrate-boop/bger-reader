@@ -1,7 +1,9 @@
-# BGE-Reader
+bger-reader 
+- Barrierefreie Bundesgerichtsentscheide
+- Accessibility tool for Swiss Federal Supreme Court decisions
+- User-Skript für Tamper-Monkey
 
-**Barrierefreie Bundesgerichtsentscheide.** / **Accessibility tool for Swiss Federal Supreme Court decisions.** 
-(english below)
+*(english below)*
 
 ## Anleitung 
 Skript läuft über die kostenlose Browser-Erweiterung **Tampermonkey**
