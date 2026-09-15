@@ -1,7 +1,6 @@
-
-- Barrierefreie Bundesgerichtsentscheide
-- Accessibility tool for Swiss Federal Supreme Court decisions
-- User-Skript für Tamper-Monkey
+# Barrierefreie Bundesgerichtsentscheide
+# Accessibility tool for Swiss Federal Supreme Court decisions
+# User-Skript für Tamper-Monkey
 
 *(english below)*
 
